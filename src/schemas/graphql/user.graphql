@@ -1,0 +1,37 @@
+type Query {
+  getUserDetails(params: UserDetailsParams!): UserDetailsResponse!
+  getAllUsers(params: AllUsersParams!): AllUsersResponse!
+}
+
+# *************** USER_DETAILS Types *************** //
+input UserDetailsParams {
+  userId: ID!
+}
+
+type UserDetailsData {
+  user: UserResponse!
+}
+
+type UserDetailsResponse {
+  responseStatus: ResponseStatusEnum!
+  data: UserDetailsData!
+}
+# *************** USER_DETAILS Types *************** //
+
+
+# *************** ALL_USERS Types *************** //
+input AllUsersParams {
+  limit: Int
+  offset: Int
+  exceptionUserId: String
+}
+
+type AllUsersData {
+  users: [UserResponse!]!
+}
+
+type AllUsersResponse {
+  responseStatus: ResponseStatusEnum! 
+  data: AllUsersData!
+}
+# *************** ALL_USERS Types *************** //

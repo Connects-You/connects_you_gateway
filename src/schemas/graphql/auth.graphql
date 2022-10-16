@@ -1,0 +1,200 @@
+type Query {
+	getMyDetails: UserResponse!
+	getCurrentLoginInfo: CurrentLoginInfoResponse!
+  getUserLoginHistory(params: UserLoginHistoryRequest!): UserLoginHistoryResponse!
+}
+
+type Mutation {
+	authenticate(params: AuthenticateParams!) : AuthenticateResponse!
+	signout: SignoutResponse!
+	refreshToken: RefreshTokenResponse!
+	updateFcmToken(params: UpdateFcmTokenParams!) : UpdateFcmTokenResponse!
+	setUserOnlineStatus(params: UserOnlineStatusParams!): UserOnlineStatusResponse!
+}
+
+# *************** MY_DETAILS Types *************** //
+type UserResponse {
+	userId: String!
+	name: String!
+	email: String!
+	photoUrl: String
+	description: String
+	publicKey: String!
+	createdAt: String!
+	updatedAt: String!
+}
+# *************** MY_DETAILS Types *************** //
+
+
+# *************** AUTHENTICATE Types *************** //
+input ClientMetaDataInput {
+	ip: String
+	userAgent: String
+	geoData: GeoDataInput
+}
+
+input GeoDataInput {
+	status: String
+	message: String
+	continent: String
+	continentCodes: String
+	country: String
+	countryCode: String
+	region: String
+	regionName: String
+	city: String
+	zip: String
+	lat: String
+	lon: String
+	timezone: String
+	offset: String
+	currency: String
+	isp: String
+	org: String
+	as: String
+	asname: String
+	reverse: String
+	mobile: String
+	proxy: String
+	hosting: String
+	query: String
+}
+
+input AuthenticateParams {
+	token: String!
+	publicKey: String!
+	fcmToken: String!
+	clientMetaData: ClientMetaDataInput
+}
+
+type AuthenticateResponse {
+	responseStatus: ResponseStatusEnum!
+	data: AuthenticateResponseData!
+}
+
+type AuthenticateResponseData {
+	method: AuthTypeEnum!
+	user: AuthenticatedUser!
+}
+
+type AuthenticatedUser {
+	token: String!
+	publicKey: String
+	name: String!
+	email: String!
+	photoUrl: String
+	userId: String!
+}
+# *************** AUTHENTICATE Types *************** //
+
+
+# *************** SIGNOUT Types *************** //
+type SignoutResponse {
+	responseStatus: ResponseStatusEnum!
+}
+# *************** SIGNOUT Types *************** //
+
+
+# *************** REFRESH TOKEN Types *************** //
+type RefreshTokenResponseData {
+	token: String!
+}
+
+type RefreshTokenResponse {
+	responseStatus: ResponseStatusEnum!
+	data: RefreshTokenResponseData!
+}
+# *************** REFRESH TOKEN Types *************** //
+
+
+# *************** UPDATE FCM TOKEN Types *************** //
+input UpdateFcmTokenParams {
+	fcmToken: String!
+}
+
+type UpdateFcmTokenResponse {
+	responseStatus: ResponseStatusEnum!
+}
+# *************** UPDATE FCM TOKEN Types *************** //
+
+
+# *************** CURRENT_LOGIN_INFO Types *************** //
+type ClientMetaData {
+	ip: String
+	userAgent: String
+	geoData: GeoData
+}
+
+type GeoData{
+	status: String
+	message: String
+	continent: String
+	continentCodes: String
+	country: String
+	countryCode: String
+	region: String
+	regionName: String
+	city: String
+	zip: String
+	lat: String
+	lon: String
+	timezone: String
+	offset: String
+	currency: String
+	isp: String
+	org: String
+	as: String
+	asname: String
+	reverse: String
+	mobile: String
+	proxy: String
+	hosting: String
+	query: String
+}
+
+type LoginInfoData {
+  userId: String!
+  loginId: String!
+  loginMetaData: ClientMetaData
+  isValid: Boolean!
+  createdAt: String!
+}
+
+type CurrentLoginInfoData{
+  currentLoginInfo: LoginInfoData!
+}
+
+type CurrentLoginInfoResponse {
+  responseStatus: ResponseStatusEnum!
+  data: CurrentLoginInfoData!
+}
+# *************** CURRENT_LOGIN_INFO Types *************** //
+
+
+# *************** USER_LOGIN_HISTORY Types *************** //
+input UserLoginHistoryRequest {
+	offset: Int
+	limit: Int
+	nonValidAllowed: Boolean
+}
+
+type UserLoginHistoryData {
+	loginHistory: [LoginInfoData!]!
+}
+
+type UserLoginHistoryResponse {
+	responseStatus: ResponseStatusEnum!
+	data: UserLoginHistoryData!
+}
+# *************** USER_LOGIN_HISTORY Types *************** //
+
+
+# *************** USER_ONLINE_STATUS Types *************** //
+input UserOnlineStatusParams {
+	isOnline: Boolean!
+}
+
+type UserOnlineStatusResponse {
+	responseStatus: ResponseStatusEnum!
+}
+# *************** USER_ONLINE_STATUS Types *************** //
