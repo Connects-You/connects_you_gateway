@@ -1,13 +1,23 @@
 import { AuthServicesClient } from '@adarsh-mishra/connects_you_services/services/auth/AuthServices';
+import { AuthTypeEnum } from '@adarsh-mishra/connects_you_services/services/auth/AuthTypeEnum';
 import { UserServicesClient } from '@adarsh-mishra/connects_you_services/services/user/UserServices';
+import { isEmptyEntity } from '@adarsh-mishra/node-utils';
 
+import { RedisExpirationDuration, RedisKeys } from '../../constants';
 import { resolverWrapper, TResolverData } from '../../helpers/resolverWrapper';
+import { PubSubEventsEnum } from '../../types';
+import {
+	TAuthenticateParams,
+	TUpdateFcmTokenParams,
+	TUserLoginHistoryParams,
+	TUserOnlineStatusParams,
+} from '../../types/schema/auth';
 
-const authenticateResolver = ({ args, ctx, wrapperData }: TResolverData) => {
+const authenticateResolver = ({ args, ctx, wrapperData }: TResolverData<TAuthenticateParams>) => {
 	return new Promise((res, rej) => {
-		const client = ctx.grpcServiceClients.auth as AuthServicesClient;
-		const params = args.params;
+		const client = ctx.grpcServiceClients?.auth as AuthServicesClient;
 		const { clientMetaData } = wrapperData;
+		const params = args.params;
 		client.authenticate(
 			{
 				token: params.token,
@@ -15,9 +25,32 @@ const authenticateResolver = ({ args, ctx, wrapperData }: TResolverData) => {
 				publicKey: params.publicKey,
 				clientMetaData,
 			},
-			(err, response) => {
+			async (err, response) => {
 				if (err) rej(err);
+				if (isEmptyEntity(response)) rej('Invalid response');
 				res(response);
+				const data = response!.data!;
+				const user = data.user!;
+				if (data.method === AuthTypeEnum.SIGNUP.toString()) {
+					await ctx.pubSub?.publish(PubSubEventsEnum.USER_CREATED, {
+						user: {
+							name: user.name,
+							email: user.email,
+							userId: user.userId,
+							photoUrl: user.photoUrl,
+							publicKey: user.publicKey,
+						},
+					});
+				}
+				// await ctx.redisClient?.setex(
+				// 	RedisKeys.userOnlineStatus(user.userId),
+				// 	6 * RedisExpirationDuration['1h'],
+				// 	'true',
+				// );
+				// await ctx.pubSub?.publish(PubSubEventsEnum.USER_ONLINE_STATUS_CHANGED, {
+				// 	userId: user.userId,
+				// 	isOnline: true,
+				// });
 			},
 		);
 	});
@@ -25,29 +58,35 @@ const authenticateResolver = ({ args, ctx, wrapperData }: TResolverData) => {
 
 const signout = ({ ctx, wrapperData }: TResolverData) => {
 	return new Promise((res, rej) => {
-		const client = ctx.grpcServiceClients.auth as AuthServicesClient;
+		const client = ctx.grpcServiceClients?.auth as AuthServicesClient;
 		const { tokenData } = wrapperData;
 		client.signout(
 			{
 				loginId: tokenData.loginId,
 				userId: tokenData.userId,
 			},
-			(err, response) => {
+			async (err, response) => {
 				if (err) rej(err);
 				res(response);
+				// await ctx.redisClient?.del(RedisKeys.userOnlineStatus(tokenData.userId));
+				// await ctx.pubSub?.publish(PubSubEventsEnum.USER_ONLINE_STATUS_CHANGED, {
+				// 	userId: tokenData.userId,
+				// 	isOnline: false,
+				// });
 			},
 		);
 	});
 };
 
-const updateFcmToken = ({ args, ctx, wrapperData }: TResolverData) => {
+const updateFcmToken = ({ args, ctx, wrapperData }: TResolverData<TUpdateFcmTokenParams>) => {
 	return new Promise((res, rej) => {
-		const client = ctx.grpcServiceClients.auth as AuthServicesClient;
+		const client = ctx.grpcServiceClients?.auth as AuthServicesClient;
 		const { tokenData } = wrapperData;
+		const params = args.params;
 		client.updateFcmToken(
 			{
 				userId: tokenData.userId,
-				fcmToken: args.fcmToken,
+				fcmToken: params.fcmToken,
 			},
 			(err, response) => {
 				if (err) rej(err);
@@ -59,7 +98,7 @@ const updateFcmToken = ({ args, ctx, wrapperData }: TResolverData) => {
 
 const refreshToken = ({ ctx, wrapperData }: TResolverData) => {
 	return new Promise((res, rej) => {
-		const client = ctx.grpcServiceClients.auth as AuthServicesClient;
+		const client = ctx.grpcServiceClients?.auth as AuthServicesClient;
 		const { clientMetaData, tokenData } = wrapperData;
 		client.refreshToken(
 			{
@@ -74,18 +113,33 @@ const refreshToken = ({ ctx, wrapperData }: TResolverData) => {
 		);
 	});
 };
-const setUserOnlineStatus = ({ args, ctx, wrapperData }: TResolverData) => {
+
+const setUserOnlineStatus = ({ args, ctx, wrapperData }: TResolverData<TUserOnlineStatusParams>) => {
 	return new Promise((res, rej) => {
-		const client = ctx.grpcServiceClients.user as UserServicesClient;
+		const client = ctx.grpcServiceClients?.user as UserServicesClient;
 		const { tokenData } = wrapperData;
+		const params = args.params;
 		client.setUserOnlineStatus(
 			{
-				isOnline: args.isOnline,
+				isOnline: params.isOnline,
 				userId: tokenData.userId,
 			},
-			(err, response) => {
+			async (err, response) => {
 				if (err) rej(err);
 				res(response);
+
+				if (params.isOnline)
+					await ctx.redisClient?.setex(
+						RedisKeys.userOnlineStatus(tokenData.userId),
+						6 * RedisExpirationDuration['1h'],
+						'true',
+					);
+				else await ctx.redisClient?.del(RedisKeys.userOnlineStatus(tokenData.userId));
+
+				await ctx.pubSub?.publish(PubSubEventsEnum.USER_ONLINE_STATUS_CHANGED, {
+					userId: tokenData.userId,
+					isOnline: params.isOnline,
+				});
 			},
 		);
 	});
@@ -93,7 +147,7 @@ const setUserOnlineStatus = ({ args, ctx, wrapperData }: TResolverData) => {
 
 const getMyDetails = ({ ctx, wrapperData }: TResolverData) => {
 	return new Promise((res, rej) => {
-		const client = ctx.grpcServiceClients.user as UserServicesClient;
+		const client = ctx.grpcServiceClients?.user as UserServicesClient;
 		const { tokenData } = wrapperData;
 		client.getUserDetails(
 			{
@@ -109,7 +163,7 @@ const getMyDetails = ({ ctx, wrapperData }: TResolverData) => {
 
 const getCurrentLoginInfo = ({ ctx, wrapperData }: TResolverData) => {
 	return new Promise((res, rej) => {
-		const client = ctx.grpcServiceClients.user as UserServicesClient;
+		const client = ctx.grpcServiceClients?.user as UserServicesClient;
 		const { tokenData } = wrapperData;
 		client.getUserLoginInfo(
 			{
@@ -124,15 +178,16 @@ const getCurrentLoginInfo = ({ ctx, wrapperData }: TResolverData) => {
 	});
 };
 
-const getUserLoginHistory = ({ args, ctx, wrapperData }: TResolverData) => {
+const getUserLoginHistory = ({ args, ctx, wrapperData }: TResolverData<TUserLoginHistoryParams>) => {
 	return new Promise((res, rej) => {
-		const client = ctx.grpcServiceClients.user as UserServicesClient;
+		const client = ctx.grpcServiceClients?.user as UserServicesClient;
 		const { tokenData } = wrapperData;
+		const params = args.params;
 		client.getUserLoginHistory(
 			{
-				nonValidAllowed: args.nonValidAllowed,
-				limit: args.limit,
-				offset: args.offset,
+				nonValidAllowed: params.nonValidAllowed,
+				limit: params.limit,
+				offset: params.offset,
 				userId: tokenData.userId,
 			},
 			(err, response) => {

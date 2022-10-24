@@ -8,6 +8,8 @@ import { IUser, TGraphqlContext, TTokenUser } from '../types';
 
 import { fetchClientMetaData } from './fetchClientMetaData';
 
+import { getUserDetails, getUserTokenVerificationData } from '.';
+
 type TWrappers = {
 	isUserDataRefetchRequired?: boolean;
 	isUserTokenVerificationRequired?: boolean;
@@ -21,32 +23,12 @@ export type TWrapperData = {
 	clientMetaData: { ip: string; userAgent: string; geoData: TGeoData };
 };
 
-export type TResolverData = { parent; args; ctx; info; wrapperData: TWrapperData };
-
-const getUserTokenVerificationData = (
-	authorization?: string,
-	isTokenVerificationRequiredWithoutExpiration?: boolean,
-) => {
-	const [bearer, token] = authorization?.split(' ') ?? [];
-	if (bearer !== 'Bearer' || !token) {
-		throw new Error('Invalid token');
-	}
-	const tokenVerificationResponse = verifyAndDecodeJWT(
-		token,
-		process.env.SECRET,
-		isTokenVerificationRequiredWithoutExpiration,
-	);
-	if (tokenVerificationResponse?.tokenExpiredError) throw new Error('Token Expired.');
-	return tokenVerificationResponse?.result as TTokenUser;
-};
-
-const getUserDetails = (userId, userClient) => {
-	return new Promise((res, rej) => {
-		userClient.getUserDetails({ userId }, (err, response) => {
-			if (err) rej(err);
-			res(response.data.user);
-		});
-	});
+export type TResolverData<T = unknown> = {
+	parent;
+	args: { params: T };
+	ctx: TGraphqlContext;
+	info;
+	wrapperData: TWrapperData;
 };
 
 export const resolverWrapper =

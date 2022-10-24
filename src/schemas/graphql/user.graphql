@@ -5,7 +5,7 @@ type Query {
 
 # *************** USER_DETAILS Types *************** //
 input UserDetailsParams {
-  userId: ID!
+  userId: String!
 }
 
 type UserDetailsData {
@@ -23,7 +23,7 @@ type UserDetailsResponse {
 input AllUsersParams {
   limit: Int
   offset: Int
-  exceptionUserId: String
+  exceptUserId: String
 }
 
 type AllUsersData {

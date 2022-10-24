@@ -1,13 +1,15 @@
 import { UserServicesClient } from '@adarsh-mishra/connects_you_services/services/user/UserServices';
 
 import { resolverWrapper, TResolverData } from '../../helpers/resolverWrapper';
+import { TAllUsersParams, TUserDetailsParams } from '../../types/schema/user';
 
-const getUserDetails = ({ args, ctx }: TResolverData) => {
+const getUserDetails = async ({ args, ctx }: TResolverData<TUserDetailsParams>) => {
 	return new Promise((res, rej) => {
-		const client = ctx.grpcServiceClients.user as UserServicesClient;
+		const client = ctx.grpcServiceClients?.user as UserServicesClient;
+		const params = args.params;
 		client.getUserDetails(
 			{
-				userId: args.userId,
+				userId: params.userId,
 			},
 			(err, response) => {
 				if (err) rej(err);
@@ -17,14 +19,15 @@ const getUserDetails = ({ args, ctx }: TResolverData) => {
 	});
 };
 
-const getAllUsers = ({ args, ctx }: TResolverData) => {
+const getAllUsers = ({ args, ctx }: TResolverData<TAllUsersParams>) => {
 	return new Promise((res, rej) => {
-		const client = ctx.grpcServiceClients.user as UserServicesClient;
+		const client = ctx.grpcServiceClients?.user as UserServicesClient;
+		const params = args.params;
 		client.getAllUsers(
 			{
-				exceptUserId: args.exceptUserId,
-				limit: args.limit,
-				offset: args.offset,
+				exceptUserId: params.exceptUserId,
+				limit: params.limit,
+				offset: params.offset,
 			},
 			(err, response) => {
 				if (err) rej(err);

@@ -2,6 +2,7 @@
 
 import { Redis } from '@adarsh-mishra/node-utils';
 import { Request, Response } from 'express';
+import { PubSub } from 'graphql-subscriptions';
 
 import { ServiceClients } from '../services';
 
@@ -10,6 +11,7 @@ import { IUser } from './user';
 export * from './user';
 export * from './userLoginHistory';
 export * from './userRefreshToken';
+export * from './pubSubEvents';
 
 declare global {
 	namespace NodeJS {
@@ -42,4 +44,5 @@ export type TGraphqlContext = {
 	redisClient?: Redis;
 	user?: IUser;
 	grpcServiceClients?: typeof ServiceClients;
+	pubSub?: PubSub;
 };
