@@ -1,4 +1,4 @@
-export enum PubSubEventsEnum {
+export enum SocketEventsEnum {
 	USER_ONLINE_STATUS_CHANGED = 'USER_ONLINE_STATUS_CHANGED',
 	USER_CREATED = 'USER_CREATED',
 }

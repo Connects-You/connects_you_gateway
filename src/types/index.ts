@@ -1,8 +1,7 @@
 /* eslint-disable @typescript-eslint/naming-convention */
 
 import { Redis } from '@adarsh-mishra/node-utils';
-import { Request, Response } from 'express';
-import { PubSub } from 'graphql-subscriptions';
+import { Server as SocketServer } from 'socket.io';
 
 import { ServiceClients } from '../services';
 
@@ -11,7 +10,7 @@ import { IUser } from './user';
 export * from './user';
 export * from './userLoginHistory';
 export * from './userRefreshToken';
-export * from './pubSubEvents';
+export * from './socketEventsEnum';
 
 declare global {
 	namespace NodeJS {
@@ -34,15 +33,8 @@ declare global {
 		interface Request {
 			user?: IUser;
 			grpcServiceClients?: typeof ServiceClients;
+			redisClient?: Redis;
+			socketIO?: SocketServer;
 		}
 	}
 }
-
-export type TGraphqlContext = {
-	req: Request;
-	res: Response;
-	redisClient?: Redis;
-	user?: IUser;
-	grpcServiceClients?: typeof ServiceClients;
-	pubSub?: PubSub;
-};
