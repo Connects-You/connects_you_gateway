@@ -1,4 +1,4 @@
-import { fetchGeoData } from '@adarsh-mishra/node-utils';
+import { fetchGeoData } from '@adarsh-mishra/node-utils/commonHelpers';
 import { Request } from 'express';
 
 export const fetchClientMetaData = async (req: Request) => {

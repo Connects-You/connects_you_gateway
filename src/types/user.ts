@@ -11,6 +11,7 @@ export interface IUser {
 	locale: string;
 	createdAt?: string;
 	updatedAt?: string;
+	userId?: string;
 }
 
 export type TTokenUser = {

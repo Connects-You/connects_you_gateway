@@ -1,12 +1,16 @@
-import { express, NotFoundError, redisConnection } from '@adarsh-mishra/node-utils';
+import { express, upgradeResponse } from '@adarsh-mishra/node-utils/expressHelpers';
+import { NotFoundError } from '@adarsh-mishra/node-utils/httpResponses';
+import { redisConnection } from '@adarsh-mishra/node-utils/redisHelpers';
 import compression from 'compression';
 import cors from 'cors';
 import dotenv from 'dotenv';
 import { Server as SocketServer } from 'socket.io';
 
 import { SocketConfig } from './configs/socketConfigs';
+import { SocketKeys } from './helpers/socketHelper';
 import { validateAccess } from './middlewares/apiAuth';
 import { socketAuthorization } from './middlewares/socketAuth';
+import { router } from './routes';
 import { ServiceClients } from './services';
 
 dotenv.config();
@@ -35,6 +39,7 @@ const io = new SocketServer(server, SocketConfig);
 
 io.use((socket, next) => socketAuthorization(socket, next, redisClient));
 io.on('connection', async (socket) => {
+	await socket.join(SocketKeys.MY_ROOM(socket.data.userId));
 	// eslint-disable-next-line no-console
 	console.log('socket connected', socket.id, await io.fetchSockets());
 });
@@ -43,6 +48,8 @@ app.use(cors());
 app.use(compression());
 app.use(express.json({ limit: '50mb' }));
 app.use(validateAccess);
+
+upgradeResponse(app).use(router);
 
 app.use((req, res, next) => {
 	req.redisClient = redisClient;

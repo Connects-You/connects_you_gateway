@@ -1,10 +1,17 @@
 import { AuthenticateRequest } from '@adarsh-mishra/connects_you_services/services/auth/AuthenticateRequest';
+import { AuthenticateResponse } from '@adarsh-mishra/connects_you_services/services/auth/AuthenticateResponse';
 import { AuthServicesClient } from '@adarsh-mishra/connects_you_services/services/auth/AuthServices';
+import { AuthTypeEnum } from '@adarsh-mishra/connects_you_services/services/auth/AuthTypeEnum';
+import { RefreshTokenResponse } from '@adarsh-mishra/connects_you_services/services/auth/RefreshTokenResponse';
+import { ResponseStatusEnum } from '@adarsh-mishra/connects_you_services/services/auth/ResponseStatusEnum';
+import { SignoutResponse } from '@adarsh-mishra/connects_you_services/services/auth/SignoutResponse';
+import { UpdateFcmTokenResponse } from '@adarsh-mishra/connects_you_services/services/auth/UpdateFcmTokenResponse';
 import { UserServicesClient } from '@adarsh-mishra/connects_you_services/services/user/UserServices';
 import { isEmptyEntity } from '@adarsh-mishra/node-utils/commonHelpers';
 
 import { RedisExpirationDuration, RedisKeys } from '../../helpers';
 import { handlerWrappers, THandlerData } from '../../helpers/handlerWrapper';
+import { setUserOnlineStatusHelper, SocketKeys } from '../../helpers/socketHelper';
 import { TUpdateFcmTokenParams, TUserLoginHistoryParams, TUserOnlineStatusParams } from '../../types/schema/auth';
 
 const authenticate = ({
@@ -12,8 +19,9 @@ const authenticate = ({
 	wrapperData,
 	grpcServiceClients,
 	redisClient,
+	socketIO,
 }: THandlerData<Pick<AuthenticateRequest, 'fcmToken' | 'publicKey' | 'token'>>) => {
-	return new Promise((res, rej) => {
+	return new Promise<AuthenticateResponse | undefined>((res, rej) => {
 		const client = grpcServiceClients?.auth as AuthServicesClient;
 		const { clientMetaData } = wrapperData;
 		const { fcmToken, publicKey, token } = body;
@@ -27,34 +35,31 @@ const authenticate = ({
 			async (err, response) => {
 				if (err) rej(err);
 				if (isEmptyEntity(response)) rej('Invalid response');
+				const { user, loginInfo } = response!.data ?? {};
+				if (!user || !loginInfo) return rej('Invalid response');
 				res(response);
-				const data = response!.data!;
-				const user = data.user!;
-				await redisClient?.setex(RedisKeys.userOnlineStatus(user.userId), 6 * RedisExpirationDuration['1h'], 1);
 
-				// TODO: publish user online status via socket
-				// if (data.method === AuthTypeEnum.SIGNUP.toString()) {
-				// 	await ctx.pubSub?.publish(PubSubEventsEnum.USER_CREATED, {
-				// 		user: {
-				// 			name: user.name,
-				// 			email: user.email,
-				// 			userId: user.userId,
-				// 			photoUrl: user.photoUrl,
-				// 			publicKey: user.publicKey,
-				// 		},
-				// 	});
-				// }
-				// await ctx.pubSub?.publish(PubSubEventsEnum.USER_ONLINE_STATUS_CHANGED, {
-				// 	userId: user.userId,
-				// 	isOnline: true,
-				// });
+				const { userId, name, photoUrl, email, publicKey } = user;
+
+				await setUserOnlineStatusHelper(redisClient!, userId, true, socketIO!);
+				socketIO?.emit(SocketKeys.USER_CREATED, {
+					user: {
+						userId,
+						name,
+						photoUrl,
+						email,
+						publicKey,
+					},
+				});
+				if (response?.data?.method === AuthTypeEnum.LOGIN.toString())
+					socketIO?.to(SocketKeys.MY_ROOM(userId)).emit(SocketKeys.MY_USER_LOGGED_IN, { loginInfo });
 			},
 		);
 	});
 };
 
-const signout = ({ redisClient, grpcServiceClients, wrapperData }: THandlerData) => {
-	return new Promise((res, rej) => {
+const signout = ({ redisClient, grpcServiceClients, wrapperData, socketIO }: THandlerData) => {
+	return new Promise<SignoutResponse | undefined>((res, rej) => {
 		const client = grpcServiceClients?.auth as AuthServicesClient;
 		const { tokenData } = wrapperData;
 		client.signout(
@@ -65,19 +70,24 @@ const signout = ({ redisClient, grpcServiceClients, wrapperData }: THandlerData)
 			async (err, response) => {
 				if (err) rej(err);
 				res(response);
-				await redisClient?.del(RedisKeys.userOnlineStatus(tokenData.userId));
-				// TODO: publish user online status via socket
-				// await ctx.pubSub?.publish(PubSubEventsEnum.USER_ONLINE_STATUS_CHANGED, {
-				// 	userId: tokenData.userId,
-				// 	isOnline: false,
-				// });
+
+				const userId = tokenData.userId;
+
+				await setUserOnlineStatusHelper(redisClient!, userId, true, socketIO!);
+
+				socketIO?.to(SocketKeys.MY_ROOM(userId)).emit(SocketKeys.MY_USER_SIGNOUT, {
+					loginInfo: {
+						loginId: tokenData.loginId,
+						isValid: false,
+					},
+				});
 			},
 		);
 	});
 };
 
 const updateFcmToken = ({ body, grpcServiceClients, wrapperData }: THandlerData<TUpdateFcmTokenParams>) => {
-	return new Promise((res, rej) => {
+	return new Promise<UpdateFcmTokenResponse | undefined>((res, rej) => {
 		const client = grpcServiceClients?.auth as AuthServicesClient;
 		const { tokenData } = wrapperData;
 		const { fcmToken } = body;
@@ -95,7 +105,7 @@ const updateFcmToken = ({ body, grpcServiceClients, wrapperData }: THandlerData<
 };
 
 const refreshToken = ({ grpcServiceClients, wrapperData }: THandlerData) => {
-	return new Promise((res, rej) => {
+	return new Promise<RefreshTokenResponse | undefined>((res, rej) => {
 		const client = grpcServiceClients?.auth as AuthServicesClient;
 		const { clientMetaData, tokenData } = wrapperData;
 		client.refreshToken(
@@ -112,14 +122,20 @@ const refreshToken = ({ grpcServiceClients, wrapperData }: THandlerData) => {
 	});
 };
 
-const setUserOnlineStatus = async ({ body, redisClient, wrapperData }: THandlerData<TUserOnlineStatusParams>) => {
+const setUserOnlineStatus = async ({
+	body,
+	redisClient,
+	wrapperData,
+	socketIO,
+}: THandlerData<TUserOnlineStatusParams>) => {
 	const { tokenData } = wrapperData;
 	const { isOnline } = body;
+	const userId = tokenData.userId;
 
-	if (isOnline)
-		await redisClient?.setex(RedisKeys.userOnlineStatus(tokenData.userId), 6 * RedisExpirationDuration['1h'], 1);
-	else await redisClient?.del(RedisKeys.userOnlineStatus(tokenData.userId));
-	// TODO: publish user online status via socket
+	await setUserOnlineStatusHelper(redisClient!, userId, isOnline, socketIO!);
+	return {
+		responseStatus: ResponseStatusEnum.SUCCESS,
+	};
 };
 
 const getMyDetails = ({ grpcServiceClients, wrapperData }: THandlerData) => {

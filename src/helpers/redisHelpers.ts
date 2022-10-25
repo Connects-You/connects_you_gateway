@@ -9,5 +9,3 @@ export const RedisExpirationDuration = {
 	'1m': 60,
 	'1s': 1,
 };
-
-export const RedisHelpers = {};

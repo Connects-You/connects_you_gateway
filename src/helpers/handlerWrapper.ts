@@ -1,10 +1,12 @@
 import assert from 'assert';
 
 import { UserServicesClient } from '@adarsh-mishra/connects_you_services/services/user/UserServices';
-import { isEmptyEntity, UnauthorizedError } from '@adarsh-mishra/node-utils';
+import { isEmptyEntity } from '@adarsh-mishra/node-utils/commonHelpers';
 import { TGeoData } from '@adarsh-mishra/node-utils/commonHelpers/types';
 import { express } from '@adarsh-mishra/node-utils/expressHelpers';
+import { UnauthorizedError } from '@adarsh-mishra/node-utils/httpResponses';
 import { Redis } from '@adarsh-mishra/node-utils/redisHelpers';
+import { Server as SocketServer } from 'socket.io';
 
 import { ServiceClients } from '../services';
 import { IUser, TTokenUser } from '../types';
@@ -40,6 +42,7 @@ export type THandlerData<
 	redisClient?: Redis;
 	grpcServiceClients?: typeof ServiceClients;
 	wrapperData: TWrapperData;
+	socketIO?: SocketServer;
 };
 
 export const handlerWrappers =
@@ -99,6 +102,7 @@ export const handlerWrappers =
 				params: req.params,
 				query: req.query,
 				redisClient: req.redisClient,
+				socketIO: req.socketIO,
 			});
 		} catch (error) {
 			// eslint-disable-next-line no-console

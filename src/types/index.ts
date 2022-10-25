@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/naming-convention */
 
-import { Redis } from '@adarsh-mishra/node-utils';
+import { Redis } from '@adarsh-mishra/node-utils/redisHelpers';
 import { Server as SocketServer } from 'socket.io';
 
 import { ServiceClients } from '../services';
@@ -10,7 +10,7 @@ import { IUser } from './user';
 export * from './user';
 export * from './userLoginHistory';
 export * from './userRefreshToken';
-export * from './socketEventsEnum';
+export * from './socket';
 
 declare global {
 	namespace NodeJS {
