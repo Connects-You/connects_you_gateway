@@ -14,6 +14,12 @@ export const OnSocketConnection = async (socket: Socket, io: SocketServer) => {
 		return;
 	}
 
+	socket.use((event, next) => {
+		// eslint-disable-next-line no-console
+		console.log('socket event =>>>>', event);
+		next();
+	});
+
 	socket.on('disconnect', async () => {
 		await socket.leave(SocketKeys.MY_ROOM(socket.data.userId));
 		await setUserOnlineStatusHelper(redisClient!, userId, false, io);

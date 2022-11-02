@@ -9,7 +9,7 @@ import { UpdateFcmTokenResponse } from '@adarsh-mishra/connects_you_services/ser
 import { UserServicesClient } from '@adarsh-mishra/connects_you_services/services/user/UserServices';
 import { isEmptyEntity } from '@adarsh-mishra/node-utils/commonHelpers';
 
-import { RedisExpirationDuration, RedisKeys } from '../../helpers';
+import { generateGRPCMetaData } from '../../helpers/generateGRPCMetaData';
 import { handlerWrappers, THandlerData } from '../../helpers/handlerWrapper';
 import { setUserOnlineStatusHelper, SocketKeys } from '../../helpers/socketHelper';
 import { TUpdateFcmTokenParams, TUserLoginHistoryParams, TUserOnlineStatusParams } from '../../types/schema/auth';
@@ -25,6 +25,7 @@ const authenticate = ({
 		const client = grpcServiceClients?.auth as AuthServicesClient;
 		const { clientMetaData } = wrapperData;
 		const { fcmToken, publicKey, token } = body;
+		const meta = generateGRPCMetaData();
 		client.authenticate(
 			{
 				token,
@@ -32,6 +33,7 @@ const authenticate = ({
 				publicKey,
 				clientMetaData,
 			},
+			meta,
 			async (err, response) => {
 				if (err) rej(err);
 				if (isEmptyEntity(response)) rej('Invalid response');
@@ -62,11 +64,13 @@ const signout = ({ redisClient, grpcServiceClients, wrapperData, socketIO }: THa
 	return new Promise<SignoutResponse | undefined>((res, rej) => {
 		const client = grpcServiceClients?.auth as AuthServicesClient;
 		const { tokenData } = wrapperData;
+		const meta = generateGRPCMetaData();
 		client.signout(
 			{
 				loginId: tokenData.loginId,
 				userId: tokenData.userId,
 			},
+			meta,
 			async (err, response) => {
 				if (err) rej(err);
 				res(response);
@@ -91,11 +95,13 @@ const updateFcmToken = ({ body, grpcServiceClients, wrapperData }: THandlerData<
 		const client = grpcServiceClients?.auth as AuthServicesClient;
 		const { tokenData } = wrapperData;
 		const { fcmToken } = body;
+		const meta = generateGRPCMetaData();
 		client.updateFcmToken(
 			{
 				userId: tokenData.userId,
 				fcmToken,
 			},
+			meta,
 			(err, response) => {
 				if (err) rej(err);
 				res(response);
@@ -108,12 +114,14 @@ const refreshToken = ({ grpcServiceClients, wrapperData }: THandlerData) => {
 	return new Promise<RefreshTokenResponse | undefined>((res, rej) => {
 		const client = grpcServiceClients?.auth as AuthServicesClient;
 		const { clientMetaData, tokenData } = wrapperData;
+		const meta = generateGRPCMetaData();
 		client.refreshToken(
 			{
 				loginId: tokenData.loginId,
 				userId: tokenData.userId,
 				clientMetaData: clientMetaData,
 			},
+			meta,
 			(err, response) => {
 				if (err) rej(err);
 				res(response);
@@ -142,10 +150,12 @@ const getMyDetails = ({ grpcServiceClients, wrapperData }: THandlerData) => {
 	return new Promise((res, rej) => {
 		const client = grpcServiceClients?.user as UserServicesClient;
 		const { tokenData } = wrapperData;
+		const meta = generateGRPCMetaData();
 		client.getUserDetails(
 			{
 				userId: tokenData.userId,
 			},
+			meta,
 			(err, response) => {
 				if (err) rej(err);
 				res(response);
@@ -158,11 +168,13 @@ const getCurrentLoginInfo = ({ grpcServiceClients, wrapperData }: THandlerData) 
 	return new Promise((res, rej) => {
 		const client = grpcServiceClients?.user as UserServicesClient;
 		const { tokenData } = wrapperData;
+		const meta = generateGRPCMetaData();
 		client.getUserLoginInfo(
 			{
 				loginId: tokenData.loginId,
 				userId: tokenData.userId,
 			},
+			meta,
 			(err, response) => {
 				if (err) rej(err);
 				res(response);
@@ -176,6 +188,7 @@ const getUserLoginHistory = ({ body, grpcServiceClients, wrapperData }: THandler
 		const client = grpcServiceClients?.user as UserServicesClient;
 		const { tokenData } = wrapperData;
 		const { limit, nonValidAllowed, offset } = body;
+		const meta = generateGRPCMetaData();
 		client.getUserLoginHistory(
 			{
 				nonValidAllowed,
@@ -183,6 +196,7 @@ const getUserLoginHistory = ({ body, grpcServiceClients, wrapperData }: THandler
 				offset,
 				userId: tokenData.userId,
 			},
+			meta,
 			(err, response) => {
 				if (err) rej(err);
 				res(response);
