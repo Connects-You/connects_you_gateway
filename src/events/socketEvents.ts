@@ -7,7 +7,12 @@ export const OnSocketConnection = async (socket: Socket, io: SocketServer) => {
 	await socket.join(SocketKeys.MY_ROOM(socket.data.userId));
 	// eslint-disable-next-line no-console
 	console.log('socket connected', socket.id, await io.fetchSockets());
-	const { authClient, redisClient, userClient, userDetails } = socket.data as TSocketData;
+	const {
+		// authClient,
+		redisClient,
+		// userClient,
+		userDetails,
+	} = socket.data as TSocketData;
 	const { userId } = userDetails ?? {};
 	if (!userId) {
 		socket.disconnect(true);

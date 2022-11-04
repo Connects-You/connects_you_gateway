@@ -11,6 +11,6 @@ router.post('/refresh-token', authHandlers.refreshToken);
 router.post('/set-user-online-status', authHandlers.setUserOnlineStatus);
 router.get('/get-my-details', authHandlers.getMyDetails);
 router.get('/get-current-login-info', authHandlers.getCurrentLoginInfo);
-router.get('/get-user-login-history', authHandlers.getUserLoginHistory);
+router.get('/get-my-login-history', authHandlers.getMyLoginHistory);
 
 export { router as authRouter };

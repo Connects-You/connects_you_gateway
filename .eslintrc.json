@@ -66,6 +66,9 @@
         "arrowParens": "always"
       }
     ],
+    "@typescript-eslint/no-unused-vars": [
+      "error"
+    ],
     "@typescript-eslint/naming-convention": [
       "error",
       {
