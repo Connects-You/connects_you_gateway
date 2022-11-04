@@ -1,7 +1,7 @@
 import { AuthServicesClient } from '@adarsh-mishra/connects_you_services/services/auth/AuthServices';
 import { SignoutResponse } from '@adarsh-mishra/connects_you_services/services/auth/SignoutResponse';
 
-import { generateGRPCMetaData } from '../../helpers/generateGRPCMetaData';
+import { generateGRPCAuthMetaData } from '../../helpers/generateGRPCMetaData';
 import { THandlerData } from '../../helpers/handlerWrapper';
 import { setUserOnlineStatusHelper, SocketKeys } from '../../helpers/socketHelper';
 
@@ -9,7 +9,7 @@ export const signout = ({ redisClient, grpcServiceClients, wrapperData, socketIO
 	return new Promise<SignoutResponse | undefined>((res, rej) => {
 		const client = grpcServiceClients?.auth as AuthServicesClient;
 		const { tokenData } = wrapperData;
-		const meta = generateGRPCMetaData();
+		const meta = generateGRPCAuthMetaData();
 		client.signout(
 			{
 				loginId: tokenData.loginId,

@@ -1,6 +1,6 @@
 import { UserServicesClient } from '@adarsh-mishra/connects_you_services/services/user/UserServices';
 
-import { generateGRPCMetaData } from '../../helpers/generateGRPCMetaData';
+import { generateGRPCUserMetaData } from '../../helpers/generateGRPCMetaData';
 import { THandlerData } from '../../helpers/handlerWrapper';
 import { TUserDetailsParams } from '../../types/schema/user';
 
@@ -8,7 +8,7 @@ export const getUserDetails = async ({ body, grpcServiceClients }: THandlerData<
 	return new Promise((res, rej) => {
 		const client = grpcServiceClients?.user as UserServicesClient;
 		const { userId } = body;
-		const meta = generateGRPCMetaData();
+		const meta = generateGRPCUserMetaData();
 		client.getUserDetails(
 			{
 				userId,

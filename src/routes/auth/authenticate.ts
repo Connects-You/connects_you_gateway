@@ -4,7 +4,7 @@ import { AuthServicesClient } from '@adarsh-mishra/connects_you_services/service
 import { AuthTypeEnum } from '@adarsh-mishra/connects_you_services/services/auth/AuthTypeEnum';
 import { isEmptyEntity } from '@adarsh-mishra/node-utils/commonHelpers';
 
-import { generateGRPCMetaData } from '../../helpers/generateGRPCMetaData';
+import { generateGRPCAuthMetaData } from '../../helpers/generateGRPCMetaData';
 import { THandlerData } from '../../helpers/handlerWrapper';
 import { setUserOnlineStatusHelper, SocketKeys } from '../../helpers/socketHelper';
 
@@ -19,7 +19,7 @@ export const authenticate = ({
 		const client = grpcServiceClients?.auth as AuthServicesClient;
 		const { clientMetaData } = wrapperData;
 		const { fcmToken, publicKey, token } = body;
-		const meta = generateGRPCMetaData();
+		const meta = generateGRPCAuthMetaData();
 		client.authenticate(
 			{
 				token,

@@ -1,6 +1,6 @@
 import { UserServicesClient } from '@adarsh-mishra/connects_you_services/services/user/UserServices';
 
-import { generateGRPCMetaData } from '../../helpers/generateGRPCMetaData';
+import { generateGRPCUserMetaData } from '../../helpers/generateGRPCMetaData';
 import { THandlerData } from '../../helpers/handlerWrapper';
 import { TUserLoginHistoryParams } from '../../types/schema/auth';
 
@@ -9,7 +9,7 @@ export const getMyLoginHistory = ({ body, grpcServiceClients, wrapperData }: THa
 		const client = grpcServiceClients?.user as UserServicesClient;
 		const { tokenData } = wrapperData;
 		const { limit, nonValidAllowed, offset } = body;
-		const meta = generateGRPCMetaData();
+		const meta = generateGRPCUserMetaData();
 		client.getUserLoginHistory(
 			{
 				nonValidAllowed,

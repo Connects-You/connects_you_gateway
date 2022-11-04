@@ -15,7 +15,7 @@ export * from './socket';
 declare global {
 	namespace NodeJS {
 		interface ProcessEnv {
-			PORT: number;
+			URL: string;
 			API_KEY: string;
 			ENV: 'dev' | 'prod';
 			SECRET: string;
@@ -27,6 +27,12 @@ declare global {
 			PROD_REDIS_DB: number;
 			PROD_REDIS_PASSWORD: string;
 			PROD_REDIS_USERNAME: string;
+			USER_SERVICE_URL: string;
+			AUTH_SERVICE_URL: string;
+			ROOM_SERVICE_URL: string;
+			USER_SERVICE_API_KEY: string;
+			AUTH_SERVICE_API_KEY: string;
+			ROOM_SERVICE_API_KEY: string;
 		}
 	}
 	namespace Express {
