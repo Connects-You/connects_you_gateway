@@ -1,13 +1,15 @@
 import { getServiceProvider, initialiseServiceAsClient } from '@adarsh-mishra/connects_you_services/index';
 import { ProtoGrpcType as AuthProtoGrpcType } from '@adarsh-mishra/connects_you_services/services/auth';
+import { ProtoGrpcType as ChatProtoGrpcType } from '@adarsh-mishra/connects_you_services/services/chat';
 import { ProtoGrpcType as RoomProtoGrpcType } from '@adarsh-mishra/connects_you_services/services/room';
 import { ProtoGrpcType as UserProtoGrpcType } from '@adarsh-mishra/connects_you_services/services/user';
 import dotenv from 'dotenv';
 
 const ServiceProviders = {
 	auth: (getServiceProvider('auth') as unknown as AuthProtoGrpcType).auth,
-	user: (getServiceProvider('user') as unknown as UserProtoGrpcType).user,
+	chat: (getServiceProvider('chat') as unknown as ChatProtoGrpcType).chat,
 	room: (getServiceProvider('room') as unknown as RoomProtoGrpcType).room,
+	user: (getServiceProvider('user') as unknown as UserProtoGrpcType).user,
 };
 
 const getServiceClients = () => {
@@ -24,7 +26,11 @@ const getServiceClients = () => {
 		service: ServiceProviders.room.RoomServices,
 		address: process.env.ROOM_SERVICE_URL,
 	});
-	return { auth, user, room };
+	const chat = initialiseServiceAsClient({
+		service: ServiceProviders.chat.ChatServices,
+		address: process.env.CHAT_SERVICE_URL,
+	});
+	return { auth, user, room, chat };
 };
 
 export const ServiceClients = getServiceClients();

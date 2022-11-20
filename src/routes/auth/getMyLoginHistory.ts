@@ -1,8 +1,8 @@
 import { UserServicesClient } from '@adarsh-mishra/connects_you_services/services/user/UserServices';
 
-import { generateGRPCUserMetaData } from '../../helpers/generateGRPCMetaData';
-import { THandlerData } from '../../helpers/handlerWrapper';
 import { TUserLoginHistoryParams } from '../../types/schema/auth';
+import { generateGRPCUserMetaData } from '../../utils/generateGRPCMetaData';
+import { THandlerData } from '../../utils/handlerWrapper';
 
 export const getMyLoginHistory = ({ body, grpcServiceClients, wrapperData }: THandlerData<TUserLoginHistoryParams>) => {
 	return new Promise((res, rej) => {
@@ -18,8 +18,8 @@ export const getMyLoginHistory = ({ body, grpcServiceClients, wrapperData }: THa
 				userId: tokenData.userId,
 			},
 			meta,
-			(err, response) => {
-				if (err) rej(err);
+			(error, response) => {
+				if (error) return rej(error);
 				res(response);
 			},
 		);

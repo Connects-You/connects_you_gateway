@@ -1,9 +1,9 @@
 import { AuthServicesClient } from '@adarsh-mishra/connects_you_services/services/auth/AuthServices';
 import { UpdateFcmTokenResponse } from '@adarsh-mishra/connects_you_services/services/auth/UpdateFcmTokenResponse';
 
-import { generateGRPCAuthMetaData } from '../../helpers/generateGRPCMetaData';
-import { THandlerData } from '../../helpers/handlerWrapper';
 import { TUpdateFcmTokenParams } from '../../types/schema/auth';
+import { generateGRPCAuthMetaData } from '../../utils/generateGRPCMetaData';
+import { THandlerData } from '../../utils/handlerWrapper';
 
 export const updateFcmToken = ({ body, grpcServiceClients, wrapperData }: THandlerData<TUpdateFcmTokenParams>) => {
 	return new Promise<UpdateFcmTokenResponse | undefined>((res, rej) => {
@@ -17,8 +17,8 @@ export const updateFcmToken = ({ body, grpcServiceClients, wrapperData }: THandl
 				fcmToken,
 			},
 			meta,
-			(err, response) => {
-				if (err) rej(err);
+			(error, response) => {
+				if (error) return rej(error);
 				res(response);
 			},
 		);

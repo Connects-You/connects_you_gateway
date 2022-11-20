@@ -26,3 +26,12 @@ export const generateGRPCRoomMetaData = (metadata?: Record<string, string>) => {
 	}
 	return meta;
 };
+
+export const generateGRPCChatMetaData = (metadata?: Record<string, string>) => {
+	const meta = new grpc.Metadata();
+	meta.add('api-key', process.env.CHAT_SERVICE_API_KEY);
+	for (const key in metadata) {
+		meta.add(key, metadata[key]);
+	}
+	return meta;
+};

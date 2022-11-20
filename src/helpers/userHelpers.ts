@@ -29,8 +29,8 @@ export const getUserDetails = (userId: string, userClient?: UserServicesClient, 
 		if (!userClient || !redisClient) {
 			return rej(new Error('UserClient or RedisClient not provided'));
 		}
-		userClient.getUserDetails({ userId }, (err, response) => {
-			if (err) rej(err);
+		userClient.getUserDetails({ userId }, (error, response) => {
+			if (error) rej(error);
 			const userData = response?.data?.user;
 			if (!userData) rej(new Error('User not found'));
 			redisClient.set(RedisKeys.userData(userId), JSON.stringify(userData)).catch(rej);

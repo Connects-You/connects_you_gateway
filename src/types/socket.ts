@@ -1,12 +1,14 @@
-import { AuthServicesClient } from '@adarsh-mishra/connects_you_services/services/auth/AuthServices';
-import { UserServicesClient } from '@adarsh-mishra/connects_you_services/services/user/UserServices';
 import { Redis } from '@adarsh-mishra/node-utils/redisHelpers';
+import { ServiceError } from '@grpc/grpc-js';
+
+import { ServiceClients } from '../services';
 
 import { IUser } from './user';
 
 export type TSocketData = {
 	userDetails?: IUser;
 	redisClient?: Redis;
-	userClient?: UserServicesClient;
-	authClient?: AuthServicesClient;
+	grpcServiceClients: typeof ServiceClients;
 };
+
+export type TSocketCallback<T = undefined> = ((error?: ServiceError | null, data?: T | null) => void) | undefined;

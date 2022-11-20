@@ -1,23 +1,23 @@
 import { UserServicesClient } from '@adarsh-mishra/connects_you_services/services/user/UserServices';
 
-import { generateGRPCUserMetaData } from '../../helpers/generateGRPCMetaData';
-import { THandlerData } from '../../helpers/handlerWrapper';
 import { TAllUsersParams } from '../../types/schema/user';
+import { generateGRPCUserMetaData } from '../../utils/generateGRPCMetaData';
+import { THandlerData } from '../../utils/handlerWrapper';
 
-export const getAllUsers = ({ body, grpcServiceClients }: THandlerData<TAllUsersParams>) => {
+export const getAllUsers = ({ query, grpcServiceClients }: THandlerData<TAllUsersParams>) => {
 	return new Promise((res, rej) => {
 		const client = grpcServiceClients?.user as UserServicesClient;
-		const { exceptUserId, limit, offset } = body;
+		const { exceptUserId, limit, offset } = query;
 		const meta = generateGRPCUserMetaData();
 		client.getAllUsers(
 			{
-				exceptUserId,
-				limit,
-				offset,
+				exceptUserId: exceptUserId as string,
+				limit: limit as number,
+				offset: offset as number,
 			},
 			meta,
-			(err, response) => {
-				if (err) rej(err);
+			(error, response) => {
+				if (error) return rej(error);
 				res(response);
 			},
 		);

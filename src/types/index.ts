@@ -30,9 +30,11 @@ declare global {
 			USER_SERVICE_URL: string;
 			AUTH_SERVICE_URL: string;
 			ROOM_SERVICE_URL: string;
+			CHAT_SERVICE_URL: string;
 			USER_SERVICE_API_KEY: string;
 			AUTH_SERVICE_API_KEY: string;
 			ROOM_SERVICE_API_KEY: string;
+			CHAT_SERVICE_API_KEY: string;
 		}
 	}
 	namespace Express {

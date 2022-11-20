@@ -1,14 +1,14 @@
-import { AuthServicesClient } from '@adarsh-mishra/connects_you_services/services/auth/AuthServices';
 import { UserServicesClient } from '@adarsh-mishra/connects_you_services/services/user/UserServices';
 import { isEmptyEntity } from '@adarsh-mishra/node-utils/commonHelpers';
 import { UnauthorizedError } from '@adarsh-mishra/node-utils/httpResponses';
 import { Redis } from '@adarsh-mishra/node-utils/redisHelpers';
 import { Socket } from 'socket.io';
 
-import { getUserDetails, getUserTokenVerificationData } from '../helpers';
+import { getUserDetails, getUserTokenVerificationData } from '../helpers/userHelpers';
 import { ServiceClients } from '../services';
+import { TSocketData } from '../types';
 
-export const socketAuthorization = async (socket: Socket, next: (err?: unknown) => void, redisClient: Redis) => {
+export const socketAuthorization = async (socket: Socket, next: (error?: unknown) => void, redisClient: Redis) => {
 	const { authorization, key } = socket.handshake.auth;
 	if (!key || key !== process.env.API_KEY || !authorization)
 		return next(new UnauthorizedError({ error: 'Authorization token is required' }));
@@ -21,6 +21,6 @@ export const socketAuthorization = async (socket: Socket, next: (err?: unknown) 
 	const userDetails = await getUserDetails(tokenResult.userId, userClient, redisClient);
 	if (isEmptyEntity(userDetails)) next(new UnauthorizedError({ error: 'User not found' }));
 
-	socket.data = { userDetails, redisClient, userClient, authClient: ServiceClients.auth as AuthServicesClient };
+	socket.data = { userDetails, redisClient, grpcServiceClients: ServiceClients } as TSocketData;
 	next();
 };

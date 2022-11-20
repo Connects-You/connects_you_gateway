@@ -1,34 +1,24 @@
-import { Server as SocketServer, Socket } from 'socket.io';
+export const SocketEvents = {
+	USER_ONLINE_STATUS_CHANGED: 'USER_ONLINE_STATUS_CHANGED',
+	USERID_ONLINE_STATUS_CHANGED: (userId: string) => `USERID_ONLINE_STATUS_CHANGED:${userId}`,
+	USER_CREATED: 'USER_CREATED',
+	MY_ROOM: (userId: string) => `MY_ROOM:${userId}`,
+	MY_USER_LOGGED_IN: 'MY_USER_LOGGED_IN',
+	MY_USER_SIGNOUT: 'MY_USER_SIGNOUT',
 
-import { setUserOnlineStatusHelper, SocketKeys } from '../helpers/socketHelper';
-import { TSocketData } from '../types';
+	ROOM_CREATED: 'ROOM_CREATED',
+	ROOM_MESSAGE: 'ROOM_MESSAGE',
+	USER_TYPING: 'USER_TYPING',
+	MESSAGES_DELETED: 'MESSAGES_DELETED',
+	MESSAGE_SEEN: 'MESSAGE_SEEN',
 
-export const OnSocketConnection = async (socket: Socket, io: SocketServer) => {
-	await socket.join(SocketKeys.MY_ROOM(socket.data.userId));
-	// eslint-disable-next-line no-console
-	console.log('socket connected', socket.id, await io.fetchSockets());
-	const {
-		// authClient,
-		redisClient,
-		// userClient,
-		userDetails,
-	} = socket.data as TSocketData;
-	const { userId } = userDetails ?? {};
-	if (!userId) {
-		socket.disconnect(true);
-		return;
-	}
+	CREATE_DUET_ROOM: 'CREATE_DUET_ROOM',
+	CREATE_GROUP_ROOM: 'CREATE_GROUP_ROOM',
+	SEND_MESSAGE: 'SEND_MESSAGE',
+	MESSAGE_SEEN_BY_ME: 'MESSAGE_SEEN_BY_ME',
+	I_AM_TYPING: 'I_AM_TYPING',
+	JOIN_ROOMS: 'JOIN_ROOMS',
+	DELETE_MESSAGES: 'DELETE_MESSAGES',
 
-	socket.use((event, next) => {
-		// eslint-disable-next-line no-console
-		console.log('socket event =>>>>', event);
-		next();
-	});
-
-	socket.on('disconnect', async () => {
-		await socket.leave(SocketKeys.MY_ROOM(socket.data.userId));
-		await setUserOnlineStatusHelper(redisClient!, userId, false, io);
-		// eslint-disable-next-line no-console
-		console.log('socket disconnected', socket.id, await io.fetchSockets());
-	});
+	SET_USER_ONLINE_STATUS: 'SET_USER_ONLINE_STATUS',
 };

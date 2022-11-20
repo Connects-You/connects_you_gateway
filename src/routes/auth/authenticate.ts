@@ -4,9 +4,10 @@ import { AuthServicesClient } from '@adarsh-mishra/connects_you_services/service
 import { AuthTypeEnum } from '@adarsh-mishra/connects_you_services/services/auth/AuthTypeEnum';
 import { isEmptyEntity } from '@adarsh-mishra/node-utils/commonHelpers';
 
-import { generateGRPCAuthMetaData } from '../../helpers/generateGRPCMetaData';
-import { THandlerData } from '../../helpers/handlerWrapper';
-import { setUserOnlineStatusHelper, SocketKeys } from '../../helpers/socketHelper';
+import { SocketEvents } from '../../events/socketEvents';
+import { setUserOnlineStatusHelper } from '../../helpers/socketHelper';
+import { generateGRPCAuthMetaData } from '../../utils/generateGRPCMetaData';
+import { THandlerData } from '../../utils/handlerWrapper';
 
 export const authenticate = ({
 	body,
@@ -28,8 +29,9 @@ export const authenticate = ({
 				clientMetaData,
 			},
 			meta,
-			async (err, response) => {
-				if (err) rej(err);
+			async (error, response) => {
+				if (error) return rej(error);
+
 				if (isEmptyEntity(response)) rej('Invalid response');
 				const { user, loginInfo } = response!.data ?? {};
 				if (!user || !loginInfo) return rej('Invalid response');
@@ -37,8 +39,7 @@ export const authenticate = ({
 
 				const { userId, name, photoUrl, email, publicKey } = user;
 
-				await setUserOnlineStatusHelper(redisClient!, userId, true, socketIO!);
-				socketIO?.emit(SocketKeys.USER_CREATED, {
+				socketIO?.emit(SocketEvents.USER_CREATED, {
 					user: {
 						userId,
 						name,
@@ -47,8 +48,9 @@ export const authenticate = ({
 						publicKey,
 					},
 				});
+				void setUserOnlineStatusHelper(redisClient!, userId, true, socketIO!);
 				if (response?.data?.method === AuthTypeEnum.LOGIN.toString())
-					socketIO?.to(SocketKeys.MY_ROOM(userId)).emit(SocketKeys.MY_USER_LOGGED_IN, { loginInfo });
+					socketIO?.to(SocketEvents.MY_ROOM(userId)).emit(SocketEvents.MY_USER_LOGGED_IN, { loginInfo });
 			},
 		);
 	});

@@ -8,12 +8,12 @@ import { UnauthorizedError } from '@adarsh-mishra/node-utils/httpResponses';
 import { Redis } from '@adarsh-mishra/node-utils/redisHelpers';
 import { Server as SocketServer } from 'socket.io';
 
+import { getRedisUserOtherwiseFetchFresh, getUserDetails, getUserTokenVerificationData } from '../helpers/userHelpers';
 import { ServiceClients } from '../services';
 import { IUser, TTokenUser } from '../types';
 
 import { errorHandler } from './errorHandler';
 import { fetchClientMetaData } from './fetchClientMetaData';
-import { getRedisUserOtherwiseFetchFresh, getUserDetails, getUserTokenVerificationData } from './userHelpers';
 
 type TWrappers = {
 	isUserDataRequired?: boolean;
@@ -46,7 +46,7 @@ export type THandlerData<
 };
 
 export const handlerWrappers =
-	(resolver: (props: THandlerData) => void, wrappers: TWrappers) =>
+	(resolver: (props: THandlerData) => Promise<unknown>, wrappers: TWrappers) =>
 	async (req: express.Request, res: express.Response) => {
 		const {
 			isUserDataRequired,
@@ -94,7 +94,7 @@ export const handlerWrappers =
 					userData = await getRedisUserOtherwiseFetchFresh(tokenResult.userId, userClient, req.redisClient);
 				}
 			}
-			return resolver({
+			const response = await resolver({
 				wrapperData: { userData, tokenData, clientMetaData },
 				body: req.body,
 				grpcServiceClients: req.grpcServiceClients,
@@ -104,6 +104,7 @@ export const handlerWrappers =
 				redisClient: req.redisClient,
 				socketIO: req.socketIO,
 			});
+			return res.create?.(response).success().send();
 		} catch (error) {
 			// eslint-disable-next-line no-console
 			console.log('resolverWrapper error', error);
