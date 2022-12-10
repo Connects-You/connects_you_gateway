@@ -40,7 +40,7 @@ export type THandlerData<
 	query: TQuery;
 	header: THeader;
 	redisClient?: Redis;
-	grpcServiceClients?: typeof ServiceClients;
+	grpcServiceClients?: ReturnType<typeof ServiceClients.getServiceClients>;
 	wrapperData: TWrapperData;
 	socketIO?: SocketServer;
 };

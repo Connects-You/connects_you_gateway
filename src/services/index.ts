@@ -33,4 +33,21 @@ const getServiceClients = () => {
 	return { auth, user, room, chat };
 };
 
-export const ServiceClients = getServiceClients();
+class SingletonServiceClients {
+	private static instance?: SingletonServiceClients;
+	private serviceClients: ReturnType<typeof getServiceClients>;
+	private constructor() {
+		this.serviceClients = getServiceClients();
+	}
+	public static getInstance(): SingletonServiceClients {
+		if (!SingletonServiceClients.instance) {
+			SingletonServiceClients.instance = new SingletonServiceClients();
+		}
+		return SingletonServiceClients.instance;
+	}
+	public getServiceClients() {
+		return this.serviceClients;
+	}
+}
+
+export const ServiceClients = SingletonServiceClients.getInstance();

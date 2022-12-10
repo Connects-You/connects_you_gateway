@@ -8,7 +8,7 @@ import { IUser } from './user';
 export type TSocketData = {
 	userDetails?: IUser;
 	redisClient?: Redis;
-	grpcServiceClients: typeof ServiceClients;
+	grpcServiceClients: ReturnType<typeof ServiceClients.getServiceClients>;
 };
 
 export type TSocketCallback<T = undefined> = ((error?: ServiceError | null, data?: T | null) => void) | undefined;

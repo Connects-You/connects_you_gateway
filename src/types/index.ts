@@ -40,7 +40,7 @@ declare global {
 	namespace Express {
 		interface Request {
 			user?: IUser;
-			grpcServiceClients?: typeof ServiceClients;
+			grpcServiceClients?: ReturnType<typeof ServiceClients.getServiceClients>;
 			redisClient?: Redis;
 			socketIO?: SocketServer;
 		}

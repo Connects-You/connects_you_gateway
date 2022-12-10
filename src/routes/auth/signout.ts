@@ -23,7 +23,7 @@ export const signout = ({ redisClient, grpcServiceClients, wrapperData, socketIO
 
 				const userId = tokenData.userId;
 
-				await setUserOnlineStatusHelper(redisClient!, userId, true, socketIO!);
+				await setUserOnlineStatusHelper(userId, false, redisClient, socketIO!);
 
 				socketIO?.to(SocketEvents.MY_ROOM(userId)).emit(SocketEvents.MY_USER_SIGNOUT, {
 					loginInfo: {

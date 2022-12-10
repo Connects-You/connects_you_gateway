@@ -29,7 +29,8 @@ export const onRoomSocketConnection = async (socket: Socket, io: SocketServer) =
 
 	socket.on('disconnect', async () => {
 		await socket.leave(SocketEvents.MY_ROOM(socket.data.userId));
-		await setUserOnlineStatusHelper(redisClient!, userId, false, io);
+		await setUserOnlineStatusHelper(userId, false, redisClient, io);
+
 		// eslint-disable-next-line no-console
 		console.log('socket disconnected', socket.id, await io.fetchSockets());
 	});

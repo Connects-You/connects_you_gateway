@@ -13,14 +13,15 @@ export const socketAuthorization = async (socket: Socket, next: (error?: unknown
 	if (!key || key !== process.env.API_KEY || !authorization)
 		return next(new UnauthorizedError({ error: 'Authorization token is required' }));
 
+	const grpcClients = ServiceClients.getServiceClients();
 	const tokenResult = getUserTokenVerificationData(authorization, false);
 	if (isEmptyEntity(tokenResult)) next(new UnauthorizedError({ error: 'Invalid token' }));
 
-	const userClient = ServiceClients.user as UserServicesClient;
+	const userClient = grpcClients.user as UserServicesClient;
 
 	const userDetails = await getUserDetails(tokenResult.userId, userClient, redisClient);
 	if (isEmptyEntity(userDetails)) next(new UnauthorizedError({ error: 'User not found' }));
 
-	socket.data = { userDetails, redisClient, grpcServiceClients: ServiceClients } as TSocketData;
+	socket.data = { userDetails, redisClient, grpcServiceClients: grpcClients } as TSocketData;
 	next();
 };

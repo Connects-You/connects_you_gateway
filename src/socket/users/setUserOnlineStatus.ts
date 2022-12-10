@@ -17,6 +17,7 @@ export const setUserOnlineStatus = async ({ body, io, socket, callback }: TSetUs
 	const { userId } = socket.data.userDetails ?? {};
 	const redisClient = socket.data.redisClient;
 
-	await setUserOnlineStatusHelper(redisClient!, userId!, isOnline, io);
+	await setUserOnlineStatusHelper(userId!, isOnline, redisClient, io);
+
 	callback?.(null);
 };

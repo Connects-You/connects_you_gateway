@@ -48,7 +48,7 @@ export const authenticate = ({
 						publicKey,
 					},
 				});
-				void setUserOnlineStatusHelper(redisClient!, userId, true, socketIO!);
+				await setUserOnlineStatusHelper(userId, true, redisClient, socketIO!);
 				if (response?.data?.method === AuthTypeEnum.LOGIN.toString())
 					socketIO?.to(SocketEvents.MY_ROOM(userId)).emit(SocketEvents.MY_USER_LOGGED_IN, { loginInfo });
 			},
